@@ -107,6 +107,6 @@ def analisar_espectro_fw_continua_corrigido(caminho_img):
     plt.show()
 
 
-# 6. Execução
+# 6. EXECUÇÃO
 caminho = r"F=MA.png"
 analisar_espectro_fw_continua_corrigido(caminho)
