@@ -40,7 +40,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
 
     # 3. DIGITALIZAÇÃO 1:1
     img = Image.open(caminho_img).convert('L')
-    img = img.resize((nz_exato, nx))  # A imagem agora respeita o limite físico
+    img = img.resize((nz_exato, nx)) 
     img_data = np.array(img)
 
     norm_img = img_data / 255.0
