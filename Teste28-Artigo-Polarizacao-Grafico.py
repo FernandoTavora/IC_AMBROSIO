@@ -171,6 +171,6 @@ axs[1, 2].set_title("(f)")
 axs[1, 2].set_xlabel("$z \\ (\\mu m)$")
 axs[1, 2].set_ylabel("$|E_\\rho(\\rho=\\rho_0, z, t) / E_0|^2$")
 
-# Visualização
+# 7. VISUALIZAÇÃO
 plt.tight_layout()
 plt.show()
