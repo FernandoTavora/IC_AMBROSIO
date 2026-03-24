@@ -3,30 +3,26 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import os
 
-# 0. Puxar caminho
 def simular_sfw_discreta(caminho_img):
     if not os.path.exists(caminho_img):
         print(f"Erro: Arquivo não encontrado em {caminho_img}")
         return
 
-    # 1. Digitalizaçao
+    # 1. DIGITALIZAÇÃO
     img = Image.open(caminho_img).convert('L')
 
     # Mantendo a resoluçao 276x75 (q nem no artigo)
     img = img.resize((276, 75))
     img_data = np.array(img)
 
-    # Inverter a matriz verticalmente para alinhar com o eixo X cartesiano
-    #F_matrix = np.flipud(img_data > 100).astype(float) # fundo Laranja
     F_matrix = np.flipud(img_data < 200).astype(float) # fundo Preto
 
-    # 2. Parametros fisicos otimizados (baseado na Figura 5 do artigo)
+    # 2. PARÂMETROS FÍSICOS OTIMIZADOS (baseado na Figura 5 do artigo)
     L = 0.06  # 6 cm
     R = 0.0163  # 1.63 cm
     lambda_0 = 632.8e-9
     k = 2 * np.pi / lambda_0
 
-    # AJUSTE DE RESOLUÇAO
     # Aumento do N para implica melhor definição longitudinal.
     # Alem de q, o Q deve ser reduzido levemente (menos paraxial) para acomodar os feixes.
     N = 50
@@ -34,12 +30,12 @@ def simular_sfw_discreta(caminho_img):
 
     num_x, num_z = F_matrix.shape
     z_axis = np.linspace(0, L, num_z)
-    x_axis = np.linspace(-R / 2, R / 2, num_x)  # centralizando o eixo X
+    x_axis = np.linspace(-R / 2, R / 2, num_x) 
 
     # Matriz resultado
     psi_sfw = np.zeros((num_x, num_z), dtype=complex)
 
-    # 3. Superposiçao (calculo otimizado)
+    # 3. SUPERPOSIÇÃO
     for p in range(num_x):  #for pq permite que sejam um feixe por vez (cada linha)/ superposiçao
         F_z = F_matrix[p, :]
 
@@ -61,10 +57,9 @@ def simular_sfw_discreta(caminho_img):
 
     intensidade = np.abs(psi_sfw) ** 2
 
-    # 4. Visualizaçao 2D (mapa de calor)
+    # 4. VISUALIZAÇÃO 2D (mapa de calor)
     plt.figure(figsize=(10, 6))
 
-    # extent define os limites fisicos: [z_min, z_max, x_min, x_max]
     extent = [0, L * 100, -R / 2 * 100, R / 2 * 100]
 
     # origin='lower' coloca o indice [0,0] da matriz no canto inferior esquerdo
@@ -79,6 +74,6 @@ def simular_sfw_discreta(caminho_img):
     plt.show()
 
 
-# Execuçao
+# 5. EXECUÇÃO
 caminho = r"C:\Users\ferna\PycharmProjects\IC-AMBROSIO\eesc_sfw.png"
 simular_sfw_discreta(caminho)
