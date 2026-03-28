@@ -5,7 +5,7 @@ from scipy.ndimage import gaussian_filter
 import os
 
 
-def analisar_espectro_fw_continua_corrigido(caminho_img):
+def analisar_espectro_fw_continua(caminho_img):
     if not os.path.exists(caminho_img):
         print(f"Erro: Arquivo não encontrado em {caminho_img}")
         return
@@ -109,4 +109,4 @@ def analisar_espectro_fw_continua_corrigido(caminho_img):
 
 # 6. EXECUÇÃO
 caminho = r"F=MA.png"
-analisar_espectro_fw_continua_corrigido(caminho)
+analisar_espectro_fw_continua(caminho)
