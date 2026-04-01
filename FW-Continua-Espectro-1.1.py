@@ -10,7 +10,7 @@ def analisar_espectro_fw_continua(caminho_img):
         print(f"Erro: Arquivo não encontrado em {caminho_img}")
         return
 
-    # 1. PARÂMETROS FÍSICOS
+    #PARÂMETROS FÍSICOS
     L = 100e-6
     R = 30e-6
     lambda_0 = 632.8e-9
@@ -19,19 +19,19 @@ def analisar_espectro_fw_continua(caminho_img):
     Q = 0.80 * k
     k_rho_Q = np.sqrt(k ** 2 - Q ** 2)
 
-    # 2. A MALHA MATEMÁTICA E O LIMITE DE RESOLUÇÃO
+    #MALHA MATEMÁTICA E O LIMITE DE RESOLUÇÃO
     n_min = int(-L * k / np.pi)
     n_vec = np.arange(n_min, 0, 1)
     z_samples = -2 * np.pi * n_vec / K_banda
     z_samples_sorted = np.sort(z_samples)
     nz_exato = len(z_samples_sorted)
 
-    # Espaçamento mínimo
+    #Espaçamento mínimo
     delta_x_min = 4.81 / k_rho_Q
     nx_maximo_permitido = int(R / delta_x_min)
     nx = nx_maximo_permitido
 
-    # 3. DIGITALIZAÇÃO SUAVIZADA
+    # DIGITALIZAÇÃO SUAVIZADA
     img = Image.open(caminho_img).convert('L')
     img = img.resize((nz_exato, nx))
     img_data = np.array(img)
@@ -49,7 +49,7 @@ def analisar_espectro_fw_continua(caminho_img):
 
     x_axis_vis = np.linspace(-R / 2, R / 2, nx)
 
-    # 4. A MALHA ESPECTRAL
+    # MALHA ESPECTRAL
     num_beta = 600
     kz_k_axis = np.linspace(-1.2, 1.2, num_beta)
     beta = kz_k_axis * k
@@ -64,7 +64,7 @@ def analisar_espectro_fw_continua(caminho_img):
         S_2D[p, :] = phase_matrix @ A_n
 
 
-    # 5. VISUALIZAÇÃO ESPECTRAL
+    # VISUALIZAÇÃO ESPECTRAL
     Intensidade_Espectral_2D = np.abs(S_2D)
 
     Espectro_Medio = np.mean(Intensidade_Espectral_2D, axis=0)
@@ -107,6 +107,6 @@ def analisar_espectro_fw_continua(caminho_img):
     plt.show()
 
 
-# 6. EXECUÇÃO
+#EXECUÇÃO
 caminho = r"F=MA.png"
 analisar_espectro_fw_continua(caminho)
