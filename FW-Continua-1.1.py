@@ -10,7 +10,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
         print(f"Erro: Arquivo não encontrado em {caminho_img}")
         return
 
-    # 1. PARÂMETROS FÍSICOS
+    # PARÂMETROS FÍSICOS
     L = 100e-6
     R = 30e-6
     lambda_0 = 632.8e-9
@@ -19,7 +19,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
     Q = 0.80 * k
     k_rho_Q = np.sqrt(k ** 2 - Q ** 2)
 
-    # 2. A MALHA MATEMÁTICA E O LIMITE DE RESOLUÇÃO
+    # MALHA MATEMÁTICA E O LIMITE DE RESOLUÇÃO
 
     n_min = int(-L * k / np.pi)
     n_vec = np.arange(n_min, 0, 1)
@@ -38,7 +38,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
     # O nx no limite físico calculado
     nx = nx_maximo_permitido
 
-    # 3. DIGITALIZAÇÃO 1:1
+    # DIGITALIZAÇÃO 1:1
     img = Image.open(caminho_img).convert('L')
     img = img.resize((nz_exato, nx)) 
     img_data = np.array(img)
@@ -55,7 +55,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
     F_matrix = gaussian_filter(F_matrix, sigma=0.8)
     F_matrix = F_matrix / np.max(F_matrix)
 
-    # 4. A MALHA VISUAL
+    # MALHA VISUAL
     resolucao_visual = 500
     z_axis_vis = np.linspace(0, L, resolucao_visual)
     x_axis_vis = np.linspace(-R / 2, R / 2, nx)
@@ -67,7 +67,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
     E_x = np.zeros((nx, resolucao_visual), dtype=complex)
     E_z = np.zeros((nx, resolucao_visual), dtype=complex)
 
-    # 5. PROCESSAMENTO VETORIAL
+    # PROCESSAMENTO VETORIAL
     for p in range(nx):
         f_envelope = F_matrix[p, :]
         if np.sum(f_envelope) < 0.01: continue
@@ -84,7 +84,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
         fator_vetorial_Ez = 1j * (k_rho_Q / Q) * j1(k_rho_Q * rho) * cos_phi
         E_z[p, :] = fator_vetorial_Ez * psi_line
 
-    # 6. VISUALIZAÇÃO
+    # VISUALIZAÇÃO
     Intensidade_Ex = np.abs(E_x) ** 2
     Intensidade_Ez = np.abs(E_z) ** 2
     Intensidade_Total = Intensidade_Ex + Intensidade_Ez
@@ -123,6 +123,6 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
     plt.tight_layout()
     plt.show()
 
-# 7. EXECUÇÃO
+# EXECUÇÃO
 caminho = r"F=MA.png"
 simular_fw_continua_vetorial_corrigida(caminho)
