@@ -8,7 +8,7 @@ def simular_sfw_discreta(caminho_img):
         print(f"Erro: Arquivo não encontrado em {caminho_img}")
         return
 
-    # 1. DIGITALIZAÇÃO
+    # DIGITALIZAÇÃO
     img = Image.open(caminho_img).convert('L')
 
     # Mantendo a resoluçao 276x75 (q nem no artigo)
@@ -17,7 +17,7 @@ def simular_sfw_discreta(caminho_img):
 
     F_matrix = np.flipud(img_data < 200).astype(float) # fundo Preto
 
-    # 2. PARÂMETROS FÍSICOS OTIMIZADOS (baseado na Figura 5 do artigo)
+    #PARÂMETROS FÍSICOS OTIMIZADOS (baseado na Figura 5 do artigo)
     L = 0.06  # 6 cm
     R = 0.0163  # 1.63 cm
     lambda_0 = 632.8e-9
@@ -35,7 +35,7 @@ def simular_sfw_discreta(caminho_img):
     # Matriz resultado
     psi_sfw = np.zeros((num_x, num_z), dtype=complex)
 
-    # 3. SUPERPOSIÇÃO
+    # SUPERPOSIÇÃO
     for p in range(num_x):  #for pq permite que sejam um feixe por vez (cada linha)/ superposiçao
         F_z = F_matrix[p, :]
 
@@ -57,7 +57,7 @@ def simular_sfw_discreta(caminho_img):
 
     intensidade = np.abs(psi_sfw) ** 2
 
-    # 4. VISUALIZAÇÃO 2D (mapa de calor)
+    # VISUALIZAÇÃO 2D (mapa de calor)
     plt.figure(figsize=(10, 6))
 
     extent = [0, L * 100, -R / 2 * 100, R / 2 * 100]
@@ -74,6 +74,6 @@ def simular_sfw_discreta(caminho_img):
     plt.show()
 
 
-# 5. EXECUÇÃO
+#EXECUÇÃO
 caminho = r"C:\Users\ferna\PycharmProjects\IC-AMBROSIO\eesc_sfw.png"
 simular_sfw_discreta(caminho)
