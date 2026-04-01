@@ -20,7 +20,6 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
     k_rho_Q = np.sqrt(k ** 2 - Q ** 2)
 
     # MALHA MATEMÁTICA E O LIMITE DE RESOLUÇÃO
-
     n_min = int(-L * k / np.pi)
     n_vec = np.arange(n_min, 0, 1)
 
