@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import j0, j1
 
-def avaliar_confinamento_transversal():
+def avaliar_conf_transversal():
     lambda_0 = 632.8e-9
     k = 2 * np.pi / lambda_0
     Q = 0.80 * k
@@ -54,4 +54,4 @@ def avaliar_confinamento_transversal():
     plt.tight_layout()
     plt.show()
 
-avaliar_confinamento_transversal()
+avaliar_conf_transversal()
