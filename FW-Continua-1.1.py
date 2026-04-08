@@ -3,125 +3,88 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.special import j1
 from scipy.ndimage import gaussian_filter
-import os
 
-def simular_cvfw(caminho_img):
-    if not os.path.exists(caminho_img):
-        print(f"Erro: Arquivo não encontrado em {caminho_img}")
-        return
-
+def fw_vec_sim(img_path):
     # Parâmetros
-    L = 100e-6
-    R = 30e-6
-    lambda_0 = 632.8e-9
-    k = 2 * np.pi / lambda_0
-    K_banda = 2 * k
-    Q = 0.80 * k
-    k_rho_Q = np.sqrt(k ** 2 - Q ** 2)
+    L, R = 100e-6, 30e-6
+    lam0 = 632.8e-9
+    k = 2 * np.pi / lam0
+    Q = 0.8 * k
+    kpQ = np.sqrt(k ** 2 - Q ** 2)
 
-    # Malha e limite de resolução
+    # Amostragem
     n_min = int(-L * k / np.pi)
-    n_vec = np.arange(n_min, 0, 1)
+    n_vec = np.arange(n_min, 0)
+    zs = np.sort(-2 * np.pi * n_vec / (2 * k))
+    nz = len(zs)
 
-    #Amostragem
-    z_samples = -2 * np.pi * n_vec / K_banda
-    z_samples_sorted = np.sort(z_samples)
-    nz_exato = len(z_samples_sorted)
+    # limite de difração
+    dx_min = 4.81 / kpQ
+    nx = int(R / dx_min)
 
-    # Cálculo do espaçamento minimo obrigatório para não haver encavalamento destrutivo
-    delta_x_min = 4.81 / k_rho_Q
+    # Tratamento da imagem
+    img = Image.open(img_path).convert('L').resize((nz, nx))
+    f_mat = np.array(img) / 255.0
 
-    # O número máximo de FWs é a janela R dividida pelo espaçamento mínimo
-    nx_maximo_permitido = int(R / delta_x_min)
+    # Inversão de cores se o fundo for branco
+    if f_mat.mean() > 0.5:
+        f_mat = 1.0 - f_mat
 
-    # O nx no limite físico calculado
-    nx = nx_maximo_permitido
+    # inverter para que a imagem seja reconstruida de forma "invertida"
+    f_mat = np.flipud(f_mat)
 
-    # DIGITALIZAÇÃO 1:1
-    img = Image.open(caminho_img).convert('L')
-    img = img.resize((nz_exato, nx)) 
-    img_data = np.array(img)
+    # Suavização para evitar frequencias infinitas
+    f_mat = gaussian_filter(f_mat, sigma=0.8)
+    f_mat /= f_mat.max()
 
-    norm_img = img_data / 255.0
-    if np.mean(norm_img) > 0.5:
-        F_matrix = 1.0 - norm_img
-    else:
-        F_matrix = norm_img
+    # Grid visual
+    z_vis = np.linspace(0, L, 500)
+    x_vis = np.linspace(-R / 2, R / 2, nx)
 
-    F_matrix = np.flipud(F_matrix)
+    # Kernel Sinc (feixe de mackinnon)
+    sinc_ker = np.sinc((k / np.pi) * (z_vis[:, None] - zs[None, :]))
 
-    # Aplicação do Filtro Gaussiano para impedir a queda brusca de uma zona ilumidada para escura (para não requisitar frequências infinitas)
-    F_matrix = gaussian_filter(F_matrix, sigma=0.8)
-    F_matrix = F_matrix / np.max(F_matrix)
+    Ex = np.zeros((nx, 500), dtype=complex)
+    Ez = np.zeros((nx, 500), dtype=complex)
 
-    # MALHA VISUAL
-    resolucao_visual = 500
-    z_axis_vis = np.linspace(0, L, resolucao_visual)
-    x_axis_vis = np.linspace(-R / 2, R / 2, nx)
-
-    #Definindo feixes de Mackinnon
-    arg_sinc = (k / np.pi) * (z_axis_vis[:, None] - z_samples_sorted[None, :])
-    kernel_mackinnon = np.sinc(arg_sinc)
-
-    E_x = np.zeros((nx, resolucao_visual), dtype=complex)
-    E_z = np.zeros((nx, resolucao_visual), dtype=complex)
-
-    # PROCESSAMENTO VETORIAL
+    # Loop de integração forma vetorial
     for p in range(nx):
-        f_envelope = F_matrix[p, :]
-        if np.sum(f_envelope) < 0.01: continue
+        env = f_mat[p, :]
+        if env.sum() < 0.05: continue
 
-        A_n = f_envelope * np.exp(-1j * Q * z_samples_sorted)
+        an = env * np.exp(-1j * Q * zs)
+        psi = sinc_ker @ an
+        Ex[p, :] = psi
 
-        #Produto matricial que substitui os somatórios
-        psi_line = kernel_mackinnon @ A_n
-        E_x[p, :] = psi_line
+        rho = np.abs(x_vis[p])
+        cp = np.sign(x_vis[p]) if x_vis[p] != 0 else 1.0
 
-        rho = np.abs(x_axis_vis[p])
-        cos_phi = np.sign(x_axis_vis[p]) if x_axis_vis[p] != 0 else 1.0
+        ez_factor = 1j * (kpQ / Q) * j1(kpQ * rho) * cp
+        Ez[p, :] = ez_factor * psi
 
-        fator_vetorial_Ez = 1j * (k_rho_Q / Q) * j1(k_rho_Q * rho) * cos_phi
-        E_z[p, :] = fator_vetorial_Ez * psi_line
+    # Plot
+    I_tot = np.abs(Ex) ** 2 + np.abs(Ez) ** 2
+    ext = [0, L * 1e6, -R / 2 * 1e6, R / 2 * 1e6]
 
-    # VISUALIZAÇÃO
-    Intensidade_Ex = np.abs(E_x) ** 2
-    Intensidade_Ez = np.abs(E_z) ** 2
-    Intensidade_Total = Intensidade_Ex + Intensidade_Ez
+    plt.figure(figsize=(10, 8))
 
-    extent = [0, L * 1e6, -R / 2 * 1e6, R / 2 * 1e6]
+    plt.subplot(311)
+    plt.imshow(I_tot, extent=ext, aspect='auto', cmap='inferno', origin='lower')
+    plt.title("Intensidade Total")
+    plt.colorbar(label="I")
 
-    plt.rcParams.update({
-        'font.size': 14,
-        'axes.titlesize': 16,
-        'axes.labelsize': 14,
-        'xtick.labelsize': 12,
-        'ytick.labelsize': 12
-    })
+    plt.subplot(312)
+    plt.imshow(np.abs(Ex) ** 2, extent=ext, aspect='auto', cmap='inferno', origin='lower')
+    plt.title("Componente Transversal |Ex|^2")
+    plt.colorbar()
 
-    fig, axes = plt.subplots(3, 1, figsize=(14, 8), sharex=True)
-
-    im0 = axes[0].imshow(Intensidade_Total, extent=extent, aspect='auto', cmap='inferno', origin='lower')
-    axes[0].set_title(r'Intensidade Elétrica Total ($|E_x|^2 + |E_z|^2$)')
-    axes[0].set_ylabel(r'$x$ ($\mu m$)')
-    cbar0 = fig.colorbar(im0, ax=axes[0])
-    cbar0.set_label(r'Intensidade', size=14)
-
-    im1 = axes[1].imshow(Intensidade_Ex, extent=extent, aspect='auto', cmap='inferno', origin='lower')
-    axes[1].set_title(r'Componente Transversal Principal ($|E_x|^2$)')
-    axes[1].set_ylabel(r'$x$ ($\mu m$)')
-    cbar1 = fig.colorbar(im1, ax=axes[1])
-    cbar1.set_label(r'Intensidade', size=14)
-
-    im2 = axes[2].imshow(Intensidade_Ez, extent=extent, aspect='auto', cmap='inferno', origin='lower')
-    axes[2].set_title(r'Componente Longitudinal Secundária ($|E_z|^2$)')
-    axes[2].set_xlabel(r'$z$ ($\mu m$)')
-    axes[2].set_ylabel(r'$x$ ($\mu m$)')
-    cbar2 = fig.colorbar(im2, ax=axes[2])
-    cbar2.set_label(r'Intensidade Relativa', size=14)
+    plt.subplot(313)
+    plt.imshow(np.abs(Ez) ** 2, extent=ext, aspect='auto', cmap='inferno', origin='lower')
+    plt.title("Componente Longitudinal |Ez|^2")
+    plt.xlabel(r"z ($\mu$m)")
+    plt.colorbar()
 
     plt.tight_layout()
     plt.show()
 
-# EXECUÇÃO
-caminho = r"F=MA.png"
-simular_cvfw(caminho)
+fw_vec_sim("F=MA.png")
