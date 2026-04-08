@@ -6,10 +6,10 @@ def simular_forca_dipolo():
 # Parâmetros
     lam = 1064e-9
     k = 2 * np.pi / lam
-    M = 1.2  # Indice de refração relativo da partícula
-    d = 50e-9  # diâmetro da particula
+    M = 1.2 
+    d = 50e-9 
     r = d / 2
-    eta = 1.0  # constante de normalização
+    eta = 1.0
 
 # Abaixo teremos 3 opções de perfis a serem analisados, escolher apenas 1 e comentar os outros:
 
@@ -45,8 +45,7 @@ def simular_forca_dipolo():
 #         deriv_env = termo_env * (-8 * n_exp * (z ** (n_exp - 1) / Zmax ** n_exp) + 1j * Q)
 #         return (2 * z / Zmax ** 2) * termo_env + (z ** 2 / Zmax ** 2) * deriv_env
 
-# Polarizabilidade exata (alpha = -i(3/2k^3)a1)
-# Variáveis para calcular a1
+# Polarizabilidade (alpha = -i(3/2k^3)a1)
     x = k * r;
     y = M * x
 
@@ -83,7 +82,7 @@ def simular_forca_dipolo():
     for i, zl in enumerate(z_samples):
         F_val = F_samples[i]
 
-        # Argumento da função sinc: u = (k/pi)*(z - zl)
+        # Argumento da função sinc
         u = (k / np.pi) * (Z_eval - zl)
         sinc_val = np.sinc(u)
 
@@ -92,10 +91,7 @@ def simular_forca_dipolo():
         dsinc_du = np.zeros_like(u)
         nz = np.abs(u) > 1e-12  # Evita divisão por zero no centro do sinc
 
-        # Regra do quociente para derivada
         dsinc_du[nz] = (pi_u[nz] * np.cos(pi_u[nz]) - np.sin(pi_u[nz])) / (np.pi * u[nz] ** 2)
-
-        # Regra da cadeia
         dsinc_dz = dsinc_du * (k / np.pi)
 
         # Acumula no campo total e na derivada
@@ -109,7 +105,7 @@ def simular_forca_dipolo():
     # Para plotagem da intensidade, avaliamos em +z0 para exibir o feixe de frente
     Intensidade_F = np.abs(F_func(z0_axis)) ** 2
 
-    # Reconstruindo a intensidade visual para a frozen wave
+    # Reconstruindo a intensidade visual para a FW
     Psi_visual = np.zeros_like(z0_axis, dtype=complex)
     for i, zl in enumerate(z_samples):
         Psi_visual += F_samples[i] * np.sinc((k / np.pi) * (z0_axis - zl))
@@ -140,5 +136,4 @@ def simular_forca_dipolo():
     plt.tight_layout()
     plt.show()
 
-if __name__ == "__main__":
-    simular_forca_dipolo()
+simular_forca_dipolo()
