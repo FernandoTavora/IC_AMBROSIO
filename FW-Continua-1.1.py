@@ -5,12 +5,12 @@ from scipy.special import j1
 from scipy.ndimage import gaussian_filter
 import os
 
-def simular_fw_continua_vetorial_corrigida(caminho_img):
+def simular_cvfw(caminho_img):
     if not os.path.exists(caminho_img):
         print(f"Erro: Arquivo não encontrado em {caminho_img}")
         return
 
-    # PARÂMETROS FÍSICOS
+    # Parâmetros
     L = 100e-6
     R = 30e-6
     lambda_0 = 632.8e-9
@@ -19,7 +19,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
     Q = 0.80 * k
     k_rho_Q = np.sqrt(k ** 2 - Q ** 2)
 
-    # MALHA MATEMÁTICA E O LIMITE DE RESOLUÇÃO
+    # Malha e limite de resolução
     n_min = int(-L * k / np.pi)
     n_vec = np.arange(n_min, 0, 1)
 
@@ -28,7 +28,7 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
     z_samples_sorted = np.sort(z_samples)
     nz_exato = len(z_samples_sorted)
 
-    # Cálculo do espaçamento mínimo obrigatório para não haver encavalamento destrutivo
+    # Cálculo do espaçamento minimo obrigatório para não haver encavalamento destrutivo
     delta_x_min = 4.81 / k_rho_Q
 
     # O número máximo de FWs é a janela R dividida pelo espaçamento mínimo
@@ -124,4 +124,4 @@ def simular_fw_continua_vetorial_corrigida(caminho_img):
 
 # EXECUÇÃO
 caminho = r"F=MA.png"
-simular_fw_continua_vetorial_corrigida(caminho)
+simular_cvfw(caminho)
