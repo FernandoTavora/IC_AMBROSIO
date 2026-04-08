@@ -2,111 +2,85 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.ndimage import gaussian_filter
-import os
 
 
-def analisar_espectro_fw_continua(caminho_img):
-    if not os.path.exists(caminho_img):
-        print(f"Erro: Arquivo não encontrado em {caminho_img}")
-        return
-
-    #PARÂMETROS FÍSICOS
-    L = 100e-6
-    R = 30e-6
-    lambda_0 = 632.8e-9
-    k = 2 * np.pi / lambda_0
-    K_banda = 2 * k
+def analise_espectro_cvfw(img_path):
+    # Mesmos dados do código de frozen wave continua
+    L, R = 100e-6, 30e-6
+    lam = 632.8e-9
+    k = 2 * np.pi / lam
     Q = 0.80 * k
-    k_rho_Q = np.sqrt(k ** 2 - Q ** 2)
+    kpQ = np.sqrt(k ** 2 - Q ** 2)
 
-    #MALHA MATEMÁTICA E O LIMITE DE RESOLUÇÃO
     n_min = int(-L * k / np.pi)
-    n_vec = np.arange(n_min, 0, 1)
-    z_samples = -2 * np.pi * n_vec / K_banda
-    z_samples_sorted = np.sort(z_samples)
-    nz_exato = len(z_samples_sorted)
+    n_vec = np.arange(n_min, 0)
+    zs = np.sort(-2 * np.pi * n_vec / (2 * k))
+    nz = len(zs)
 
-    #Espaçamento mínimo
-    delta_x_min = 4.81 / k_rho_Q
-    nx_maximo_permitido = int(R / delta_x_min)
-    nx = nx_maximo_permitido
+    dx_min = 4.81 / kpQ
+    nx = int(R / dx_min)
 
-    # DIGITALIZAÇÃO SUAVIZADA
-    img = Image.open(caminho_img).convert('L')
-    img = img.resize((nz_exato, nx))
-    img_data = np.array(img)
-    norm_img = img_data / 255.0
+    img = Image.open(img_path).convert('L').resize((nz, nx))
+    f_mat = np.array(img) / 255.0
 
-    if np.mean(norm_img) > 0.5:
-        F_matrix = 1.0 - norm_img
-    else:
-        F_matrix = norm_img
+    if f_mat.mean() > 0.5:
+        f_mat = 1.0 - f_mat
 
-    F_matrix = np.flipud(F_matrix)
+    # Correção de orientação: flip vertical para bater com origin='lower'
+    f_mat = np.flipud(f_mat)
+    f_mat = gaussian_filter(f_mat, sigma=0.8)
 
-    # sigma=0.8 para manter estrita coerência com o script principal da FW
-    F_matrix = gaussian_filter(F_matrix, sigma=0.8)
+    # Calculo do espectro
+    nb = 600
+    kzk = np.linspace(-1.2, 1.2, nb)
+    beta = kzk * k
 
-    x_axis_vis = np.linspace(-R / 2, R / 2, nx)
-
-    # MALHA ESPECTRAL
-    num_beta = 600
-    kz_k_axis = np.linspace(-1.2, 1.2, num_beta)
-    beta = kz_k_axis * k
-
-    S_2D = np.zeros((nx, num_beta), dtype=complex)
-    phase_matrix = np.exp(1j * beta[:, None] * z_samples_sorted[None, :])
+    # Matriz espectral
+    S2D = np.zeros((nx, nb), dtype=complex)
+    # Matriz de fase para transformada discreta
+    P = np.exp(1j * beta[:, None] * zs[None, :])
 
     for p in range(nx):
-        f_envelope = F_matrix[p, :]
-        if np.sum(f_envelope) < 0.01: continue
-        A_n = f_envelope * np.exp(-1j * Q * z_samples_sorted)
-        S_2D[p, :] = phase_matrix @ A_n
+        env = f_mat[p, :]
+        if env.sum() < 0.01: continue
 
+        # Coeficientes an da fw
+        an = env * np.exp(-1j * Q * zs)
+        S2D[p, :] = P @ an
 
-    # VISUALIZAÇÃO ESPECTRAL
-    Intensidade_Espectral_2D = np.abs(S_2D)
+    # Médias para plot
+    S_abs = np.abs(S2D)
+    spec_avg = np.mean(S_abs, axis=0)
+    spec_max = np.max(S_abs, axis=0)
 
-    Espectro_Medio = np.mean(Intensidade_Espectral_2D, axis=0)
-    Espectro_Maximo = np.max(Intensidade_Espectral_2D, axis=0)
+# Plot
+    plt.figure(figsize=(12, 8))
 
-    plt.rcParams.update({
-        'font.size': 14,
-        'axes.titlesize': 16,
-        'axes.labelsize': 14,
-        'xtick.labelsize': 12,
-        'ytick.labelsize': 12
-    })
+    # Alvo Fisico
+    plt.subplot(211)
+    ext = [0, L * 1e6, -R / 2 * 1e6, R / 2 * 1e6]
+    plt.imshow(f_mat, extent=ext, aspect='auto', cmap='gray', origin='lower')
+    plt.title(r"Alvo Físico $F(x, z)$")
+    plt.ylabel(r"x ($\mu$m)")
 
-    fig, axes = plt.subplots(2, 1, figsize=(14, 8))
+    # Espectro
+    plt.subplot(212)
+    plt.plot(kzk, spec_avg, 'navy', lw=2, label='Espectro Médio')
+    plt.fill_between(kzk, 0, spec_max, color='royalblue', alpha=0.2, label='Envelope Máximo')
 
-    extent_real = [0, L * 1e6, -R / 2 * 1e6, R / 2 * 1e6]
-    im0 = axes[0].imshow(F_matrix, extent=extent_real, aspect='auto', cmap='gray', origin='lower')
-    axes[0].set_title(r'O Alvo Físico $F(x, z)$ (Com Suavização Gaussiana)')
-    axes[0].set_xlabel(r'$z$ ($\mu m$)')
-    axes[0].set_ylabel(r'$x$ ($\mu m$)')
+    # Linhas para referencia
+    plt.axvline(0.8, color='orange', ls='-', label=r'Portadora $Q=0.8k$')
+    plt.axvline(1.0, color='red', ls='--', alpha=0.5, label='Limite Evanescente')
+    plt.axvline(-1.0, color='red', ls='--', alpha=0.5)
 
-    axes[1].plot(kz_k_axis, Espectro_Medio, color='darkblue', lw=2.5, label='Espectro Médio (Folha de Luz)')
-
-    axes[1].fill_between(kz_k_axis, 0, Espectro_Maximo, color='royalblue', alpha=0.3,
-                         label=f'Envelope Máximo (Limites de todas as {nx} FWs)')
-
-    axes[1].set_title(r'Espectro Longitudinal $|S(k_z)|$')
-    axes[1].set_xlabel(r'$k_z / k$')
-    axes[1].set_ylabel(r'$|S(k_z)|$')
-
-    axes[1].axvline(x=0.80, color='orange', linestyle='-', lw=2, alpha=0.9, label='Portadora $Q=0.8k$')
-    axes[1].axvline(x=1.0, color='red', linestyle='--', lw=2, alpha=0.8, label='Limite Físico ($k_z=k$)')
-    axes[1].axvline(x=-1.0, color='red', linestyle='--', lw=2, alpha=0.8)
-
-    axes[1].legend(loc='upper left', fontsize=11)
-    axes[1].set_xlim(-1.0, 1.0)
-    axes[1].grid(True, alpha=0.4)
+    plt.title(r"Espectro Longitudinal $|S(k_z)|$")
+    plt.xlabel(r"$k_z / k$")
+    plt.ylabel("Magnitude")
+    plt.xlim(-1, 1)
+    plt.grid(True, alpha=0.3)
+    plt.legend(loc='upper left', fontsize=10)
 
     plt.tight_layout()
     plt.show()
 
-
-#EXECUÇÃO
-caminho = r"F=MA.png"
-analisar_espectro_fw_continua(caminho)
+analise_espectro_cvfw("F=MA.png")
