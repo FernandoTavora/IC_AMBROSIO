@@ -3,11 +3,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import os
 
-def simular_sfw_discreta(caminho_img):
-    if not os.path.exists(caminho_img):
-        print(f"Erro: Arquivo não encontrado em {caminho_img}")
-        return
-
+def simular_sfw_discreta(img_path):
     # DIGITALIZAÇÃO
     img = Image.open(caminho_img).convert('L')
 
@@ -75,5 +71,4 @@ def simular_sfw_discreta(caminho_img):
 
 
 #EXECUÇÃO
-caminho = r"C:\Users\ferna\PycharmProjects\IC-AMBROSIO\eesc_sfw.png"
-simular_sfw_discreta(caminho)
+simular_sfw_discreta("eesc_sfw.png")
