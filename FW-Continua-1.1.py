@@ -7,8 +7,8 @@ from scipy.ndimage import gaussian_filter
 def fw_vec_sim(img_path):
     # Parâmetros
     L, R = 100e-6, 30e-6
-    lam0 = 632.8e-9
-    k = 2 * np.pi / lam0
+    lambda_0 = 632.8e-9
+    k = 2 * np.pi / lambda_0
     Q = 0.8 * k
     kpQ = np.sqrt(k ** 2 - Q ** 2)
 
