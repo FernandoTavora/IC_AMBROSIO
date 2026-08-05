@@ -7,6 +7,7 @@ from scipy.ndimage import gaussian_filter
 from pathlib import Path
 
 def simular_cvfw_3D(img_path):
+
     L = 100e-6
     R = 30e-6
     lambda_0 = 632.8e-9
@@ -114,7 +115,7 @@ def simular_cvfw_3D(img_path):
         )
 
     # Ajuste de camera
-    ax.set_title("CSFW", fontweight='bold', fontsize=16)
+    ax.set_title("", fontweight='bold', fontsize=16)
     ax.set_xlabel(r'$z$ ($\mu m$)')
     ax.set_ylabel(r'$y$ ($\mu m$)')
     ax.set_zlabel(r'$x$ ($\mu m$)')
