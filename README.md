@@ -29,7 +29,7 @@ The primary goal of this project is to provide a stable and efficient codebase f
 
 Scientific Overview
 
-Traditional optical trapping relies on highly focused Gaussian beams. However, complex 3D micromanipulation requires non-diffracting wave fields—such as Bessel beams—capable of maintaining their transverse profile over long propagation distances. 
+Traditional optical trapping relies on highly focused Gaussian beams. However, complex 3D micromanipulation requires non-diffracting wave fields, such as Bessel beams, capable of maintaining their transverse profile over long propagation distances. 
 
 This repository implements Longitudinally Structured Light Sheets (LSLSs). By superimposing continuous spectra of Bessel modes, we bypass the limitations of discrete Fourier truncation (Gibbs phenomenon and evanescent waves), achieving high-fidelity 1D, 2D, and 3D intensity profiles with a 1:1 aspect ratio. Furthermore, the codes evaluate the full vector field ( \mathbf{E} = E_x\hat{x} + E_z\hat{z} ), ensuring that the strictly Maxwellian longitudinal component ( E_z ), which emerges from Gauss's Law ( \nabla \cdot \mathbf{E} = 0 ), is accurately mapped for Rayleigh regime force calculations.
 
