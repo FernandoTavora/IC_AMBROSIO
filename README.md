@@ -37,22 +37,22 @@ Repository Structure: The Four Core Simulators
 
 The repository is divided into four progressively complex Python scripts. Each script takes a morphological target  F(x,z)  (inputted as standard `.png` images) and synthesizes the exact 3D electromagnetic field required to sculpt that light structure in free space.
 
-1. `cvfw_ideal_homogeneous.py` (Code 1)
+1. `FW-3D-SAME-without-crosstalk.py` (Code 1)
       Purpose:   Simulates a homogeneous 3D volume (e.g., extruding a single "F=MA" image across multiple parallel planes).
       Physics:   Operates in the Ideal Regime. It assumes perfect electromagnetic isolation between adjacent light sheets. Crosstalk is mathematically disabled ( y_p = y_{plane} ), providing the "ground truth" of the maximum theoretical contrast of the Mackinnon solutions.
 
-2. `cvfw_ideal_tomography.py` (Code 2)
+2. `FW-3D-DIFFERENT-without-crosstalk.py` (Code 2)
       Purpose: Simulates a heterogeneous 3D volume (e.g., slicing a sphere into multiple distinct layers).
       Physics: Also operates in the Ideal Regime. It dynamically loads a list of different morphological matrices and renders a full tomographic 3D hologram, proving that the algorithm can sustain asymmetric, arbitrary topologies without structural collapse.
 
-  3. `cvfw_realistic_homogeneous.py` (Code 3)
+  3. `FW-3D-SAME-REAL.py` (Code 3)
       Purpose: Simulates a homogeneous 3D volume under Real Physical Conditions.
       Physics: Introduces the full coherent superposition of the volume. 
           Crosstalk: The electromagnetic interference between adjacent light sheets is active.
           Bessel-Root Anchoring: Employs an intelligent geometric shielding algorithm (`scipy.special.jn_zeros`) that mathematically locks the inter-planar spacing exactly at the dark rings of the J_0 Bessel function, mitigating out-of-plane destructive interference.
           Bessel-Gauss Apodization:   Applies a transverse Gaussian envelope (w_0) to restrict the infinite energy of ideal Bessel beams, mirroring realistic finite-aperture experimental laser setups.
 
-  4. `cvfw_realistic_tomography.py` (Code 4)
+  4. `FW-3D-DIFFERENT-REAL.py` (Code 4)
       Purpose: The ultimate 3D volumetric display simulator.
       Physics: Combines the distinct tomographic slicing (from Code 2) with the rigorous real-world electrodynamics (from Code 3). It renders complex 3D structures (like hollow or solid spheres) subjected to severe, asymmetric cross-talk, utilizing root-anchoring and apodization to preserve the topological integrity of the optical trap.
 
